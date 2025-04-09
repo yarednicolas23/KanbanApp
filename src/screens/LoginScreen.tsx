@@ -33,7 +33,7 @@ const LoginScreen = () => {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home');
+      navigation.navigate('KanbanBoard');
     } catch (error: any) {
       let errorMessage = 'Error al iniciar sesión';
       

@@ -39,7 +39,7 @@ const RegisterScreen = () => {
     setError('');
     try {
       await signUp(email, password, displayName);
-      navigation.navigate('Home');
+      navigation.navigate('KanbanBoard');
     } catch (error: any) {
       let errorMessage = 'Error al registrar usuario';
       
