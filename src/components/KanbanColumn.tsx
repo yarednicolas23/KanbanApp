@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import { View, StyleSheet, Dimensions, Platform, Text, TouchableOpacity } from 'react-native';
 import { TaskStatus } from '../types';
 
 interface Task {
@@ -30,21 +29,20 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 }) => {
   return (
     <View style={styles.column}>
-      <Text variant="titleMedium" style={styles.title}>{title}</Text>
+      <Text style={styles.title}>{title}</Text>
       {tasks.map((task) => (
-        <View key={task.id} style={styles.taskWrapper}>
-          <Card 
-            style={styles.taskCard} 
-            onPress={() => onTaskPress(task)}
-          >
-            <Card.Content>
-              <Text variant="titleMedium">{task.title}</Text>
-              <Text variant="bodyMedium" numberOfLines={2}>
-                {task.description}
-              </Text>
-            </Card.Content>
-          </Card>
-        </View>
+        <TouchableOpacity 
+          key={task.id} 
+          style={styles.taskWrapper}
+          onPress={() => onTaskPress(task)}
+        >
+          <View style={styles.taskCard}>
+            <Text style={styles.taskTitle}>{task.title}</Text>
+            <Text style={styles.taskDescription} numberOfLines={2}>
+              {task.description}
+            </Text>
+          </View>
+        </TouchableOpacity>
       ))}
     </View>
   );
@@ -55,37 +53,66 @@ const styles = StyleSheet.create({
     width: COLUMN_WIDTH,
     margin: 8,
     padding: 8,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: Platform.select({
+      ios: '#f2f2f7',
+      android: '#f5f5f5',
+    }),
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
     minHeight: 400,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 16,
     textAlign: 'center',
+    color: Platform.select({
+      ios: '#000000',
+      android: '#000000',
+    }),
   },
   taskWrapper: {
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowRadius: 8,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   taskCard: {
     backgroundColor: 'white',
+    padding: 16,
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
   },
   taskTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 4,
+    color: Platform.select({
+      ios: '#000000',
+      android: '#000000',
+    }),
   },
   taskDescription: {
     fontSize: 14,
-    color: '#666',
+    color: Platform.select({
+      ios: '#666666',
+      android: '#666666',
+    }),
   },
 });
 

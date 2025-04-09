@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { 
+  View, 
+  StyleSheet, 
+  Image, 
+  Platform, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ActivityIndicator 
+} from 'react-native';
 import { signUp } from '../services/auth';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -62,49 +70,47 @@ const RegisterScreen = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        label="Nombre"
+        placeholder="Nombre"
         value={displayName}
         onChangeText={setDisplayName}
         style={styles.input}
-        mode="flat"
-        theme={{ colors: { primary: '#6200ee' } }}
+        placeholderTextColor="#666"
       />
       <TextInput
-        label="Email"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
-        mode="flat"
         keyboardType="email-address"
         autoCapitalize="none"
-        theme={{ colors: { primary: '#6200ee' } }}
+        placeholderTextColor="#666"
       />
       <TextInput
-        label="Contraseña"
+        placeholder="Contraseña"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
-        mode="flat"
         secureTextEntry
-        theme={{ colors: { primary: '#6200ee' } }}
+        placeholderTextColor="#666"
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button 
-        mode="contained" 
-        onPress={handleRegister} 
+      <TouchableOpacity 
         style={styles.button}
-        loading={loading}
+        onPress={handleRegister}
         disabled={loading}
       >
-        Registrarse
-      </Button>
-      <Button 
-        mode="text" 
-        onPress={() => navigation.navigate('Login')}
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.buttonText}>Registrarse</Text>
+        )}
+      </TouchableOpacity>
+      <TouchableOpacity 
         style={styles.link}
+        onPress={() => navigation.navigate('Login')}
       >
-        ¿Ya tienes una cuenta? Inicia sesión
-      </Button>
+        <Text style={styles.linkText}>¿Ya tienes una cuenta? Inicia sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -114,7 +120,10 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Platform.select({
+      ios: '#f2f2f7',
+      android: '#fff',
+    }),
   },
   logo: {
     width: 200,
@@ -123,12 +132,33 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    paddingHorizontal: 15,
     marginBottom: 15,
-    backgroundColor: 'transparent',
+    fontSize: 16,
+    backgroundColor: 'white',
   },
   button: {
+    height: 50,
+    backgroundColor: '#007AFF',
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 10,
-    paddingVertical: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   error: {
     color: 'red',
@@ -137,6 +167,12 @@ const styles = StyleSheet.create({
   },
   link: {
     marginTop: 15,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 16,
   },
 });
 

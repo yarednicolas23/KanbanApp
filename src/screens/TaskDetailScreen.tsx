@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, TextInput, Button, IconButton } from 'react-native-paper';
+import { 
+  View, 
+  StyleSheet, 
+  Text, 
+  TextInput, 
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
-import { Task, TaskStatus } from '../types';
+import { Task } from '../types';
 import { updateTask, deleteTask } from '../services/tasks';
 import { database } from '../services/firebase';
 import { ref, onValue, off } from 'firebase/database';
@@ -17,23 +24,33 @@ interface TaskDetailScreenProps {
   route: TaskDetailScreenRouteProp;
 }
 
-const statusOptions: { value: TaskStatus; label: string }[] = [
-  { value: 'todo', label: 'To Do' },
-  { value: 'inProgress', label: 'In Progress' },
-  { value: 'done', label: 'Done' },
+const TASK_STATUS = {
+  TODO: 'todo',
+  IN_PROGRESS: 'inProgress',
+  DONE: 'done'
+} as const;
+
+const statusOptions = [
+  { label: 'To Do', value: TASK_STATUS.TODO },
+  { label: 'In Progress', value: TASK_STATUS.IN_PROGRESS },
+  { label: 'Done', value: TASK_STATUS.DONE },
 ];
 
 export default function TaskDetailScreen({ navigation, route }: TaskDetailScreenProps) {
   const { taskId } = route.params;
   const [task, setTask] = useState<Task | null>(null);
+  const [editedTask, setEditedTask] = useState<Task | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTask, setEditedTask] = useState<Partial<Task>>({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch task details from Firebase
     const taskRef = ref(database, `tasks/${taskId}`);
+    
     const unsubscribe = onValue(taskRef, (snapshot) => {
-      setTask(snapshot.val());
+      const data = snapshot.val();
+      if (data) {
+        setTask({ ...data, id: taskId });
+      }
     });
 
     return () => {
@@ -42,31 +59,35 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   }, [taskId]);
 
   const handleUpdateTask = async () => {
-    if (!task) return;
+    if (!editedTask) return;
 
+    setLoading(true);
     try {
-      await updateTask(task.id, editedTask);
+      await updateTask(taskId, editedTask);
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating task:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteTask = async () => {
-    if (!task) return;
-
+    setLoading(true);
     try {
-      await deleteTask(task.id);
+      await deleteTask(taskId);
       navigation.goBack();
     } catch (error) {
       console.error('Error deleting task:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (!task) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
@@ -74,13 +95,15 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
-        />
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>Task Details</Text>
-        <IconButton
-          icon={isEditing ? 'check' : 'pencil'}
+        <TouchableOpacity
+          style={styles.editButton}
           onPress={() => {
             if (isEditing) {
               handleUpdateTask();
@@ -89,22 +112,26 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
               setIsEditing(true);
             }
           }}
-        />
+        >
+          <Text style={styles.editButtonText}>
+            {isEditing ? '✓' : '✎'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
         {isEditing ? (
           <>
             <TextInput
-              label="Title"
-              value={editedTask.title}
-              onChangeText={(text) => setEditedTask({ ...editedTask, title: text })}
+              placeholder="Title"
+              value={editedTask?.title}
+              onChangeText={(text) => setEditedTask({ ...editedTask!, title: text })}
               style={styles.input}
             />
             <TextInput
-              label="Description"
-              value={editedTask.description}
-              onChangeText={(text) => setEditedTask({ ...editedTask, description: text })}
+              placeholder="Description"
+              value={editedTask?.description}
+              onChangeText={(text) => setEditedTask({ ...editedTask!, description: text })}
               style={styles.input}
               multiline
             />
@@ -119,31 +146,41 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
         <View style={styles.statusContainer}>
           <Text style={styles.statusLabel}>Status:</Text>
           {statusOptions.map((option) => (
-            <Button
+            <TouchableOpacity
               key={option.value}
-              mode={task.status === option.value ? 'contained' : 'outlined'}
+              style={[
+                styles.statusButton,
+                task.status === option.value && styles.statusButtonActive
+              ]}
               onPress={() => {
                 if (isEditing) {
-                  setEditedTask({ ...editedTask, status: option.value });
+                  setEditedTask({ ...editedTask!, status: option.value });
                 } else {
                   updateTask(task.id, { status: option.value });
                 }
               }}
-              style={styles.statusButton}
             >
-              {option.label}
-            </Button>
+              <Text style={[
+                styles.statusButtonText,
+                task.status === option.value && styles.statusButtonTextActive
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
 
-        <Button
-          mode="contained"
-          onPress={handleDeleteTask}
+        <TouchableOpacity
           style={styles.deleteButton}
-          buttonColor="red"
+          onPress={handleDeleteTask}
+          disabled={loading}
         >
-          Delete Task
-        </Button>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.deleteButtonText}>Delete Task</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -152,31 +189,70 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: Platform.select({
+      ios: '#f2f2f7',
+      android: '#f5f5f5',
+    }),
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: 'white',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  backButton: {
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#007AFF',
   },
   title: {
-    flex: 1,
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
+  },
+  editButton: {
+    padding: 8,
+  },
+  editButtonText: {
+    fontSize: 20,
+    color: '#007AFF',
   },
   content: {
     flex: 1,
     padding: 16,
   },
   input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    paddingHorizontal: 15,
     marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: 'white',
   },
   taskTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 8,
   },
   taskDescription: {
@@ -189,13 +265,45 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 8,
   },
   statusButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    borderWidth: 1,
+    borderColor: '#ddd',
     marginBottom: 8,
   },
+  statusButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  statusButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  statusButtonTextActive: {
+    color: 'white',
+  },
   deleteButton: {
+    height: 50,
+    backgroundColor: '#FF3B30',
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 'auto',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
