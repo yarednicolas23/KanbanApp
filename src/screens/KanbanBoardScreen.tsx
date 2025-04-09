@@ -40,20 +40,39 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
     navigation.setOptions({
       title: 'Kanban Board',
       headerRight: () => (
-        <TouchableOpacity 
-          onPress={logout}
-          style={{ marginRight: 16 }}
-        >
-          <Text style={{ color: '#007AFF', fontSize: 16 }}>Logout</Text>
-        </TouchableOpacity>
+        Platform.OS === 'android' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity 
+              onPress={() => setVisible(true)}
+              style={{ marginRight: 16 }}
+            >
+              <Text style={{ color: '#007AFF', fontSize: 16 }}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={logout}
+              style={{ marginRight: 16 }}
+            >
+              <Text style={{ color: '#007AFF', fontSize: 16 }}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            onPress={() => setVisible(true)}
+            style={{ marginRight: 16 }}
+          >
+            <Text style={{ color: '#007AFF', fontSize: 16 }}>+</Text>
+          </TouchableOpacity>
+        )
       ),
       headerLeft: () => (
-        <TouchableOpacity 
-          onPress={() => setVisible(true)}
-          style={{ marginLeft: 16 }}
-        >
-          <Text style={{ color: '#007AFF', fontSize: 16 }}>+</Text>
-        </TouchableOpacity>
+        Platform.OS === 'ios' ? (
+          <TouchableOpacity 
+            onPress={logout}
+            style={{ marginLeft: 16 }}
+          >
+            <Text style={{ color: '#007AFF', fontSize: 16 }}>Logout</Text>
+          </TouchableOpacity>
+        ) : null
       ),
     });
   }, [navigation, logout]);
