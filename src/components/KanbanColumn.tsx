@@ -15,6 +15,7 @@ interface KanbanColumnProps {
   status: TaskStatus;
   onTaskPress: (task: Task) => void;
   onTaskMove: (taskId: string, newStatus: TaskStatus) => void;
+  backgroundColor?: string;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -25,10 +26,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   tasks, 
   status,
   onTaskPress,
-  onTaskMove 
+  onTaskMove,
+  backgroundColor = 'white'
 }) => {
   return (
-    <View style={styles.column}>
+    <View style={[styles.column, { backgroundColor }]}>
       <Text style={styles.title}>{title}</Text>
       {tasks.map((task) => (
         <TouchableOpacity 
@@ -53,10 +55,6 @@ const styles = StyleSheet.create({
     width: COLUMN_WIDTH,
     margin: 8,
     padding: 8,
-    backgroundColor: Platform.select({
-      ios: '#f2f2f7',
-      android: '#f5f5f5',
-    }),
     borderRadius: Platform.select({
       ios: 10,
       android: 8,
@@ -67,7 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: 'left',
     color: Platform.select({
       ios: '#000000',
       android: '#000000',
@@ -75,20 +73,6 @@ const styles = StyleSheet.create({
   },
   taskWrapper: {
     marginBottom: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
   },
   taskCard: {
     backgroundColor: 'white',

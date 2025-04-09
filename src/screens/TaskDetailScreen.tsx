@@ -34,6 +34,12 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const statusColors = {
+    [TASK_STATUS.TODO]: '#E3F2FD',
+    [TASK_STATUS.IN_PROGRESS]: '#FFF8E1',
+    [TASK_STATUS.DONE]: '#E8F5E9',
+  };
+
   useEffect(() => {
     const loadTask = async () => {
       if (user) {
@@ -133,6 +139,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
                     key={status}
                     style={[
                       styles.statusButton,
+                      { backgroundColor: statusColors[status] },
                       editedTask?.status === status && styles.selectedStatusButton,
                     ]}
                     onPress={() => handleStatusChange(status)}
@@ -228,16 +235,18 @@ const styles = StyleSheet.create({
       ios: 10,
       android: 8,
     }),
-    backgroundColor: '#f0f0f0',
+    marginRight: 8,
   },
   selectedStatusButton: {
-    backgroundColor: '#007AFF',
+    borderWidth: 2,
+    borderColor: '#007AFF',
   },
   statusButtonText: {
     fontSize: 14,
     color: '#666',
   },
   selectedStatusButtonText: {
-    color: 'white',
+    color: '#007AFF',
+    fontWeight: '600',
   },
 }); 

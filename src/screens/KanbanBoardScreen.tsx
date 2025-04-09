@@ -100,9 +100,9 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
   };
 
   const columns = [
-    { id: TASK_STATUS.TODO, title: 'To Do' },
-    { id: TASK_STATUS.IN_PROGRESS, title: 'In Progress' },
-    { id: TASK_STATUS.DONE, title: 'Done' },
+    { id: TASK_STATUS.TODO, title: 'To Do', color: '#E3F2FD' },
+    { id: TASK_STATUS.IN_PROGRESS, title: 'In Progress', color: '#FFF8E1' },
+    { id: TASK_STATUS.DONE, title: 'Done', color: '#E8F5E9' },
   ];
 
   return (
@@ -116,6 +116,7 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
             tasks={tasks.filter((task) => task.status === column.id)}
             onTaskPress={(task) => navigation.navigate('TaskDetail', { taskId: task.id })}
             onTaskMove={handleTaskMove}
+            backgroundColor={column.color}
           />
         ))}
       </ScrollView>
