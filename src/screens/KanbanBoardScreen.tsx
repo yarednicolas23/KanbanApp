@@ -13,7 +13,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { Task } from '../types';
 import { TaskStatus } from '../types';
-import { createTask, getTasksByUser, moveTask } from '../services/tasks';
+import { createTask, getTasksByUser, moveTask, reorderTasks } from '../services/tasks';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import KanbanColumn from '../components/KanbanColumn';
@@ -35,6 +35,7 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
     status: TASK_STATUS.TODO,
   });
   const [loading, setLoading] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   useEffect(() => {
     navigation.setOptions({
@@ -110,12 +111,51 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
     }
   };
 
-  const handleTaskMove = async (taskId: string, newStatus: TaskStatus) => {
+  const handleTaskMove = async (taskId: string, newStatus: TaskStatus): Promise<void> => {
     try {
+      // Actualizar el estado local primero
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId ? { ...task, status: newStatus } : task
+        )
+      );
+
+      // Luego actualizar en la base de datos
       await moveTask(taskId, newStatus);
     } catch (error) {
       console.error('Error moving task:', error);
+      // Revertir el cambio en caso de error
+      setTasks(prevTasks => prevTasks);
     }
+  };
+
+  const handleDragStart = (task: Task) => {
+    setDraggedTask(task);
+  };
+
+  const handleDragEnd = async (tasks: Task[]) => {
+    if (!draggedTask) return;
+
+    try {
+      // Actualizar el estado local primero para una respuesta más rápida
+      setTasks(tasks);
+
+      // Luego actualizar en la base de datos
+      const taskToUpdate = tasks.find(t => t.id === draggedTask.id);
+      if (taskToUpdate && taskToUpdate.status !== draggedTask.status) {
+        await moveTask(draggedTask.id, taskToUpdate.status);
+      }
+    } catch (error) {
+      console.error('Error moving task:', error);
+      // Revertir el cambio en caso de error
+      setTasks(prevTasks => prevTasks);
+    } finally {
+      setDraggedTask(null);
+    }
+  };
+
+  const handleTaskPress = (task: Task) => {
+    navigation.navigate('TaskDetail', { taskId: task.id });
   };
 
   const columns = [
@@ -127,17 +167,36 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
   return (
     <View style={styles.container}>
       <ScrollView horizontal style={styles.board} contentContainerStyle={styles.boardContent}>
-        {columns.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            title={column.title}
-            status={column.id}
-            tasks={tasks.filter((task) => task.status === column.id)}
-            onTaskPress={(task) => navigation.navigate('TaskDetail', { taskId: task.id })}
-            onTaskMove={handleTaskMove}
-            backgroundColor={column.color}
-          />
-        ))}
+        <KanbanColumn
+          title="To Do"
+          tasks={tasks.filter(task => task.status === TASK_STATUS.TODO)}
+          status={TASK_STATUS.TODO}
+          onTaskPress={handleTaskPress}
+          onTaskMove={handleTaskMove}
+          backgroundColor="#E3F2FD"
+          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+        />
+        <KanbanColumn
+          title="In Progress"
+          tasks={tasks.filter(task => task.status === TASK_STATUS.IN_PROGRESS)}
+          status={TASK_STATUS.IN_PROGRESS}
+          onTaskPress={handleTaskPress}
+          onTaskMove={handleTaskMove}
+          backgroundColor="#FFF8E1"
+          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+        />
+        <KanbanColumn
+          title="Done"
+          tasks={tasks.filter(task => task.status === TASK_STATUS.DONE)}
+          status={TASK_STATUS.DONE}
+          onTaskPress={handleTaskPress}
+          onTaskMove={handleTaskMove}
+          backgroundColor="#E8F5E9"
+          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+        />
       </ScrollView>
 
       <Modal

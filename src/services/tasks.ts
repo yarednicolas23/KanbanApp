@@ -48,6 +48,19 @@ export const moveTask = async (taskId: string, newStatus: TaskStatus): Promise<v
   await updateTask(taskId, { status: newStatus });
 };
 
+export const reorderTasks = async (tasks: Task[]): Promise<void> => {
+  const updates: { [key: string]: Partial<Task> } = {};
+  
+  tasks.forEach((task, index) => {
+    updates[`${task.id}`] = {
+      order: index,
+      updatedAt: new Date(),
+    };
+  });
+
+  await update(tasksRef, updates);
+};
+
 export const getTasksByUser = (userId: string, callback: (tasks: Task[]) => void): () => void => {
   const tasksQuery = query(tasksRef, orderByChild('userId'), equalTo(userId));
   

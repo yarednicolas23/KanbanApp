@@ -8,6 +8,7 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   userId: string;
+  order?: number;
 }
 
 export interface User {

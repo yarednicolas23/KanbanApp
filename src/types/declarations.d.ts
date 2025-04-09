@@ -92,26 +92,36 @@ declare module 'react-native-gesture-handler' {
     children: React.ReactNode;
   }
 
+  export interface GestureHandlerRootViewProps extends ViewProps {
+    children: React.ReactNode;
+  }
+
+  export interface PanGestureHandlerProps extends ViewProps {
+    onGestureEvent?: (event: PanGestureHandlerGestureEvent) => void;
+    children: React.ReactNode;
+  }
+
+  export interface PanGestureHandlerGestureEvent {
+    nativeEvent: {
+      translationX: number;
+      translationY: number;
+      state: number;
+    };
+    state: number;
+    translationX: number;
+    translationY: number;
+  }
+
   export const GestureDetector: ComponentType<GestureDetectorProps>;
+  export const GestureHandlerRootView: ComponentType<GestureHandlerRootViewProps>;
+  export const PanGestureHandler: ComponentType<PanGestureHandlerProps>;
   export const Gesture: {
     Pan: () => any;
   };
 }
 
 declare module 'react-native-reanimated' {
-  import { ComponentType } from 'react';
-  import { ViewProps } from 'react-native';
-
-  export interface AnimatedViewProps extends ViewProps {
-    children: React.ReactNode;
-  }
-
-  export const Animated: {
-    View: ComponentType<AnimatedViewProps>;
-  };
-
-  export function useAnimatedStyle(style: () => any): any;
-  export function withSpring(value: any, config?: any): any;
+  export * from 'react-native-reanimated/lib/typescript/reanimated2';
 }
 
 declare module 'react-native-safe-area-context' {
