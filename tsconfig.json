@@ -8,7 +8,7 @@
     },
     "jsx": "react-native",
     "esModuleInterop": true,
-    "types": ["react-native-reanimated"]
+    "types": ["react-native-reanimated", "jest"]
   },
   "include": [
     "**/*.ts",

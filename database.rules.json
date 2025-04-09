@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "tasks": {
+      ".indexOn": ["userId"],
+      "$taskId": {
+        ".read": "auth != null && root.child('tasks').child($taskId).child('userId').val() === auth.uid",
+        ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid) && (!newData.exists() || newData.child('userId').val() === auth.uid)"
+      }
+    },
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    }
+  }
+} 
