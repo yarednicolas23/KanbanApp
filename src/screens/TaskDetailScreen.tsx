@@ -7,11 +7,12 @@ import {
   TouchableOpacity, 
   ActivityIndicator,
   Platform,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { Task, TaskStatus } from '../types';
-import { getTaskById, updateTask } from '../services/tasks';
+import { getTaskById, updateTask, deleteTask } from '../services/tasks';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import { TASK_STATUS } from '../constants';
@@ -105,6 +106,36 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
     }
   };
 
+  const handleDeleteTask = async () => {
+    if (!task) return;
+    
+    Alert.alert(
+      'Delete Task',
+      'Are you sure you want to delete this task?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await deleteTask(task.id);
+              navigation.goBack();
+            } catch (error) {
+              console.error('Error deleting task:', error);
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   if (!task) {
     return (
       <View style={styles.container}>
@@ -170,6 +201,17 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
           </>
         )}
       </View>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteTask}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.deleteButtonText}>Delete Task</Text>
+        )}
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -247,6 +289,22 @@ const styles = StyleSheet.create({
   },
   selectedStatusButtonText: {
     color: '#007AFF',
+    fontWeight: '600',
+  },
+  deleteButton: {
+    height: 50,
+    backgroundColor: '#FF3B30',
+    borderRadius: Platform.select({
+      ios: 10,
+      android: 8,
+    }),
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 16,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
 }); 
