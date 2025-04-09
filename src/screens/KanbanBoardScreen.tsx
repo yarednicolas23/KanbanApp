@@ -37,6 +37,28 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    navigation.setOptions({
+      title: 'Kanban Board',
+      headerRight: () => (
+        <TouchableOpacity 
+          onPress={logout}
+          style={{ marginRight: 16 }}
+        >
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>Logout</Text>
+        </TouchableOpacity>
+      ),
+      headerLeft: () => (
+        <TouchableOpacity 
+          onPress={() => setVisible(true)}
+          style={{ marginLeft: 16 }}
+        >
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>+</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, logout]);
+
+  useEffect(() => {
     if (user) {
       const unsubscribe = getTasksByUser(user.id, (tasks) => {
         setTasks(tasks);
@@ -85,13 +107,6 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Kanban Board</Text>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView horizontal style={styles.board} contentContainerStyle={styles.boardContent}>
         {columns.map((column) => (
           <KanbanColumn
@@ -105,48 +120,50 @@ export default function KanbanBoardScreen({ navigation }: KanbanBoardScreenProps
         ))}
       </ScrollView>
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setVisible(true)}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-
       <Modal
         visible={visible}
         transparent
         animationType="slide"
         onRequestClose={() => setVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>Create New Task</Text>
-            <TextInput
-              placeholder="Title"
-              value={newTask.title}
-              onChangeText={(text) => setNewTask({ ...newTask, title: text })}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Description"
-              value={newTask.description}
-              onChangeText={(text) => setNewTask({ ...newTask, description: text })}
-              style={styles.input}
-              multiline
-            />
-            <TouchableOpacity 
-              style={styles.button}
-              onPress={handleCreateTask}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.buttonText}>Create Task</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setVisible(false)}
+        >
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modal}>
+              <Text style={styles.modalTitle}>Create New Task</Text>
+              <TextInput
+                placeholder="Title"
+                value={newTask.title}
+                onChangeText={(text) => setNewTask({ ...newTask, title: text })}
+                style={styles.input}
+              />
+              <TextInput
+                placeholder="Description"
+                value={newTask.description}
+                onChangeText={(text) => setNewTask({ ...newTask, description: text })}
+                style={styles.input}
+                multiline
+              />
+              <TouchableOpacity 
+                style={styles.button}
+                onPress={handleCreateTask}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Create Task</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -160,73 +177,11 @@ const styles = StyleSheet.create({
       android: '#f5f5f5',
     }),
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'white',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    padding: 8,
-  },
-  logoutText: {
-    color: '#007AFF',
-    fontSize: 16,
-  },
   board: {
     flex: 1,
   },
   boardContent: {
     padding: 16,
-  },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  fabText: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,

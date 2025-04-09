@@ -10,7 +10,8 @@ import {
   onValue,
   off,
   DatabaseReference,
-  DataSnapshot
+  DataSnapshot,
+  get
 } from 'firebase/database';
 import { database } from './firebase';
 import { Task, TaskStatus } from '../types';
@@ -63,4 +64,13 @@ export const getTasksByUser = (userId: string, callback: (tasks: Task[]) => void
   return () => {
     off(tasksQuery, 'value', handleData);
   };
+};
+
+export const getTaskById = async (taskId: string): Promise<Task> => {
+  const taskRef = ref(database, `tasks/${taskId}`);
+  const snapshot = await get(taskRef);
+  if (!snapshot.exists()) {
+    throw new Error('Task not found');
+  }
+  return { ...snapshot.val(), id: taskId };
 }; 
